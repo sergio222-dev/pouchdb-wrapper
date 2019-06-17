@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "rimraf coverage build tmp",
     "build": "tsc -p tsconfig.release.json",
+    "build:browser": "tsc -p tsconfig.browser.json",
     "build:watch": "tsc -w -p tsconfig.release.json",
     "lint": "tslint -t stylish --project \"tsconfig.json\"",
     "test": "jest --coverage",
@@ -19,6 +20,7 @@
   },
   "homepage": "https://github.com/sanson222/pouchdb-wrapper#readme",
   "devDependencies": {
+    "@types/ajv": "^1.0.0",
     "@types/jest": "^24.0.15",
     "@types/node": "^12.0.8",
     "@types/pouchdb": "^6.3.3",
@@ -33,6 +35,7 @@
     "typescript": "^3.5.2"
   },
   "dependencies": {
+    "ajv": "^6.10.0",
     "pouchdb": "^7.1.1"
   }
 }

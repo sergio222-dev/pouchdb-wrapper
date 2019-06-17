@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../build-browser/src/core/SchemaBuilder.js"></script>
+</head>
+<body>
+
+<script>
+
+  const schemeTest = {
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+      },
+      lastName: {
+        type: 'string',
+      }
+    },
+    required: ['name', 'lastName'],
+  };
+
+    const schema = new SchemaBuilder();
+    schema.addSchema('Person', schemeTest);
+
+    schema.save('Person', {name: 'sergio', lastName: 'Molina'}, 'sergio');
+</script>
+
+</body>
+</html>
