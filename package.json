@@ -1,0 +1,38 @@
+{
+  "name": "pouchdb-wrapper",
+  "version": "1.0.0",
+  "description": "Wrapper for pouchDb",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf coverage build tmp",
+    "build": "tsc -p tsconfig.release.json",
+    "build:watch": "tsc -w -p tsconfig.release.json",
+    "lint": "tslint -t stylish --project \"tsconfig.json\"",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "repository": "git+https://github.com/sanson222/pouchdb-wrapper.git",
+  "author": "Sanson222",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sanson222/pouchdb-wrapper/issues"
+  },
+  "homepage": "https://github.com/sanson222/pouchdb-wrapper#readme",
+  "devDependencies": {
+    "@types/jest": "^24.0.15",
+    "@types/node": "^12.0.8",
+    "@types/pouchdb": "^6.3.3",
+    "jest": "^24.8.0",
+    "prettier": "^1.18.2",
+    "rimraf": "^2.6.3",
+    "ts-jest": "^24.0.2",
+    "tslint": "^5.17.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-microsoft-contrib": "^6.2.0",
+    "tsutils": "^3.14.0",
+    "typescript": "^3.5.2"
+  },
+  "dependencies": {
+    "pouchdb": "^7.1.1"
+  }
+}
