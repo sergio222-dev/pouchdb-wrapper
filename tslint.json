@@ -5,7 +5,7 @@
 
 {
   "extends": [
-    "tslint-microsoft-contrib/recommended",
+    "tslint:latest",
     "tslint-config-prettier"
   ],
   "rules": {
@@ -17,6 +17,7 @@
     "no-void-expression": false,
     "no-redundant-jsdoc": false,
     "prefer-type-cast": false,
+    "no-console": false,
     "typedef": [
       true,
       "parameter",
