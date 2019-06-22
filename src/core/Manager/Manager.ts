@@ -27,15 +27,17 @@ export class Manager implements IManager {
   // @ts-ignore
   private schemes: Map<string, Scheme> = new Map<string, Scheme>();
 
-  private constructor() {
-  }
+  private constructor() { }
 
   public configure(configurator: IConfigurator) {
     this.schemes = configurator.getSchemesMap();
     const schemes: Scheme[] = configurator.getSchemes();
     schemes.forEach(
       (scheme: Scheme) => {
-        const db = new PouchDB(scheme.getContextName());
+        const db = new PouchDB(scheme.getContextName(), {
+          adapter: 'idb',
+          auto_compaction: true,
+        });
         this.contextCollection.set(scheme.getContextName(), db);
       },
     );

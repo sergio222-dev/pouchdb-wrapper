@@ -63,6 +63,7 @@ export class UnitOfWork implements IUnitOfWork {
       async (operations: IOperation[], key: string) => {
         const ctx = this.contextCollection.get(key);
         const bulk: IEntity[] = operations.map((o: IOperation) => o.getEntity());
+        console.log(`will update the entity with id ${bulk[0]._id}`);
         const result = await ctx.bulkDocs(bulk);
         console.log('result from Update bulk', result);
       },
@@ -85,6 +86,8 @@ export class UnitOfWork implements IUnitOfWork {
         console.log('result from delete bulk', result);
       },
     );
+
+    this.operations = [];
   }
 
   public rollback() {
