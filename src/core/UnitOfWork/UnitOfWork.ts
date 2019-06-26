@@ -4,7 +4,8 @@ import { OperationType } from '../Operation/Operation';
 import { IUnitOfWork } from './IUnitOfWork';
 
 export class UnitOfWork implements IUnitOfWork {
-  private contextCollection: Map<string, PouchDB.Database>;
+
+  public contextCollection: Map<string, PouchDB.Database>;
   private isActive: boolean = false;
   private operations: IOperation[] = [];
 
@@ -90,8 +91,21 @@ export class UnitOfWork implements IUnitOfWork {
     this.operations = [];
   }
 
-  public rollback() {
+  public async rollback() {
     //
+  }
+
+  public async removeAllContext(): Promise<void> {
+    await this.contextCollection.forEach(
+      async (c: PouchDB.Database) => {
+        await c.destroy();
+      });
+    this.contextCollection.clear();
+  }
+
+  public async removeContext(contextName: string): Promise<void> {
+    await this.contextCollection.get(contextName).destroy();
+    this.contextCollection.delete(contextName);
   }
 
   private getAllOperations(type: OperationType) {
@@ -116,5 +130,6 @@ export class UnitOfWork implements IUnitOfWork {
 
     return operationsByContext;
   }
+
 
 }

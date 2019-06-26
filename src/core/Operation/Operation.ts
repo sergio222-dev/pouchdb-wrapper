@@ -8,9 +8,9 @@ export class Operation implements IOperation{
   private readonly contextName: string;
   private readonly operationType: OperationType;
 
-  constructor(entity: IEntity, contextName: string, operationType: OperationType) {
+  constructor(entity: IEntity, operationType: OperationType) {
     this.entity = entity;
-    this.contextName = contextName;
+    this.contextName = entity.constructor.name;
     this.operationType = operationType;
   }
 

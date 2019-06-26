@@ -4,7 +4,7 @@ import { AbstractEntity } from '../Entity/AbstractEntity';
 import { IEntity } from '../Entity/IEntity';
 import { Scheme } from '../Entity/Scheme';
 import { IOperation } from '../Operation/IOperation';
-import { Operation } from '../Operation/Operation';
+import { Operation, OperationType } from '../Operation/Operation';
 import { GenericRepository } from '../Repository/GenericRepository';
 import { IUnitOfWork } from '../UnitOfWork/IUnitOfWork';
 import { UnitOfWork } from '../UnitOfWork/UnitOfWork';
@@ -21,69 +21,78 @@ export class Manager implements IManager {
 
   private static instance: Manager;
 
-  public contextCollection: Map<string, PouchDB.Database> = new Map<string, PouchDB.Database>();
+  // public contextCollection: Map<string, PouchDB.Database> = new Map<string, PouchDB.Database>();
 
   private unitOfWork: IUnitOfWork;
   // @ts-ignore
   private schemes: Map<string, Scheme> = new Map<string, Scheme>();
 
-  private constructor() { }
+  private constructor() {
+  }
 
   public configure(configurator: IConfigurator) {
-    this.schemes = configurator.getSchemesMap();
+    const contextCollection: Map<string, PouchDB.Database> = new Map<string, PouchDB.Database>();
     const schemes: Scheme[] = configurator.getSchemes();
+
+    this.schemes = configurator.getSchemesMap();
+
     schemes.forEach(
       (scheme: Scheme) => {
         const db = new PouchDB(scheme.getContextName(), {
           adapter: 'idb',
           auto_compaction: true,
         });
-        this.contextCollection.set(scheme.getContextName(), db);
+        contextCollection.set(scheme.getContextName(), db);
       },
     );
-    this.unitOfWork = new UnitOfWork(this.contextCollection);
+
+    this.unitOfWork = new UnitOfWork(contextCollection);
   }
 
-  public getRepository<T extends IEntity>(name: string) {
-    if (!this.contextCollection.has(name)) {
-      throw new Error(`The repository ${name} do not exists in the scheme`);
+  public getRepository<T extends IEntity>(contextName: string) {
+    if (!this.isContextNameInScheme(contextName)) {
+      throw new Error(`The repository ${contextName} do not exists in the scheme`);
     }
-    return new GenericRepository<T>(this.contextCollection.get(name), this.schemes.get(name));
+
+    const contextCollection = this.unitOfWork.contextCollection;
+    const context = contextCollection.get(contextName);
+    const scheme = this.schemes.get(contextName);
+
+    return new GenericRepository<T>(context, scheme);
   }
 
-  public putEntity(e: IEntity) {
-    this.beginTransaction();
-    if (!this.isEntityInScheme(e)) {
-      throw new Error(`the constructor name ${e.constructor.name} is not in the scheme configuration`);
-    }
-
-    const op: IOperation = new Operation(e, e.constructor.name, 'PUT');
-    this.unitOfWork.addOperation(op);
+  public putEntity(entity: IEntity) {
+    this.addOperation(entity, 'PUT');
   }
 
-  public updateEntity(e: IEntity) {
-    this.beginTransaction();
-    if (!this.isEntityInScheme(e)) {
-      throw new Error(`the constructor name ${e.constructor.name} is not in the scheme configuration`);
-    }
-
-    const op: IOperation = new Operation(e, e.constructor.name, 'UPDATE');
-    this.unitOfWork.addOperation(op);
+  public updateEntity(entity: IEntity) {
+    this.addOperation(entity, 'UPDATE');
   }
 
-  public deleteEntity(e: AbstractEntity) {
-    this.beginTransaction();
-    if (!this.isEntityInScheme(e)) {
-      throw new Error(`the constructor name ${e.constructor.name} is not in the scheme configuration`);
-    }
-
-    e._deleted = true; // Delete for bulkDocs
-    const op: IOperation = new Operation(e, e.constructor.name, 'DELETE');
-    this.unitOfWork.addOperation(op);
+  public deleteEntity(entity: AbstractEntity) {
+    this.addOperation(entity, 'DELETE');
   }
 
   public async flush() {
     await this.unitOfWork.commit();
+  }
+
+  public async destroy(contextName: string): Promise<void> {
+    if (!this.isContextNameInScheme(contextName)) {
+      throw new Error(`The context ${contextName} do not exists in the scheme`);
+    }
+    const contextCollection = this.unitOfWork.contextCollection;
+    const context = contextCollection.get(contextName);
+    await context.destroy();
+  }
+
+  public async destroyAll(): Promise<void> {
+    const contextCollection = this.unitOfWork.contextCollection;
+    await contextCollection.forEach(
+      async (c: PouchDB.Database) => {
+        await c.destroy();
+      },
+    );
   }
 
   private beginTransaction() {
@@ -92,8 +101,23 @@ export class Manager implements IManager {
     }
   }
 
-  private isEntityInScheme(e: IEntity): boolean {
-    return !!this.schemes.get(e.constructor.name);
+  private addOperation(entity: IEntity, operationType: OperationType) {
+    const constructName: string = entity.constructor.name;
+    if (!this.isContextNameInScheme(constructName)) {
+      throw new Error(`the constructor name ${constructName} is not in the scheme configuration`);
+    }
+
+    this.beginTransaction();
+    if (operationType === 'DELETE') {
+      entity._deleted = true;
+    }
+    const op: IOperation = new Operation(entity, operationType);
+    this.unitOfWork.addOperation(op);
   }
+
+  private isContextNameInScheme(contextName: string): boolean {
+    return !!this.schemes.get(contextName);
+  }
+
 
 }
